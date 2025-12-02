@@ -65,7 +65,7 @@ You can enable **Debug Logging** to troubleshoot connection issues:
 
 ## 🇸🇰 Slovak Description
 
-**TapHome Local** je integrácia pre Home Assistant, ktorá umožňuje plné ovládanie systému TapHome cez lokálnu sieť.
+**TapHome Local** je integrácia pre Home Assistant, ktorá umožňuje plné ovládanie systému TapHome cez lokálnu sieť pomocou home assistanta.
 
 **Hlavné výhody:**
 * Funguje bez cloudu (lokálne API).
