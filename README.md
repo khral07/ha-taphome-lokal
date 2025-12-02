@@ -9,21 +9,24 @@
 
 ---
 
-## ✨ Features
+## ✨ Key Features
+
+### 🔍 AUTO-DISCOVERY & ZERO CONFIG
+**No YAML editing is required!** The integration automatically detects and creates entities for all devices exposed via the TapHome API. Just enter your IP and Token, and everything appears instantly.
 
 * **100% Local Control:** Works even without internet connection.
 * **Fast Response:** Uses local polling (default 2s interval) and direct GET requests for instant control.
-* **Easy Setup:** Fully configurable via Home Assistant GUI (Config Flow).
-* **Supported Devices:**
-    * 💡 **Lights:** On/Off, Dimming (Hue & Analog), Tunable White (CCT). Includes "Move-to-On" logic.
-    * 🌡️ **Climate:** Smart Room Controllers with dynamic min/max temperature limits.
-    * 🪟 **Covers:** Blinds and shutters with precise positioning.
-    * 🔌 **Switches:** Relay outputs, sockets, valves.
-    * 📊 **Sensors:** Temperature, Humidity (auto % conversion), CO2, Power, Energy, etc.
-    * 🚪 **Binary Sensors:** Reed contacts (Doors/Windows).
-    * 🛡️ **Alarm:** Virtual Alarm control (Arm/Disarm).
-    * 🔘 **Modes:** Multi-value switches (e.g., Presence: Home/Away).
+* **Easy Setup:** Fully configurable via Home Assistant GUI.
 
+### 📱 Supported Devices
+* 💡 **Lights:** On/Off, Dimming (Hue & Analog), Tunable White (CCT). Includes "Move-to-On" logic.
+* 🌡️ **Climate:** Smart Room Controllers with dynamic min/max temperature limits.
+* 🪟 **Covers:** Blinds and shutters with precise positioning.
+* 🔌 **Switches:** Relay outputs, sockets, valves.
+* 📊 **Sensors:** Temperature, Humidity (auto % conversion), CO2, Power, Energy, etc.
+* 🚪 **Binary Sensors:** Reed contacts (Doors/Windows).
+* 🛡️ **Alarm:** Virtual Alarm control (Arm/Disarm).
+* 🔘 **Modes:** Multi-value switches (e.g., Presence: Home/Away).
 ## 🚀 Installation
 
 ### Option 1: Via HACS (Recommended)
