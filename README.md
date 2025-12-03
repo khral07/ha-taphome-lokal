@@ -3,20 +3,26 @@
 
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![version](https://img.shields.io/badge/version-1.0.1-blue)](https://github.com/USERNAME/REPO_NAME)
+[![version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/USERNAME/REPO_NAME)
 
-**TapHome Local** is a custom integration for Home Assistant that allows you to control your **TapHome** smart home system locally via Home Assistant, without relying on the cloud. It communicates directly with the TapHome Core unit via the local API.
+**TapHome Local** is a custom integration for Home Assistant that provides **instant, local control** of your TapHome smart home system. It communicates directly with the TapHome Core unit via the local API and uses **Webhooks** for immediate state updates.
 
 ---
 
-## ✨ Key Features
+## ✨ Key Features (v2.0)
 
-### 🔍 AUTO-DISCOVERY & ZERO CONFIG
-**No YAML editing is required!** The integration automatically detects and creates entities for all devices exposed via the TapHome API. Just enter your IP and Token, and everything appears instantly.
+### ⚡ INSTANT UPDATES VIA WEBHOOK
+The integration now supports **Push notifications**. When you switch a light or press a button in your house, Home Assistant updates **instantly** (milliseconds). No more waiting for polling intervals!
 
-* **100% Local Control:** Works even without internet connection.
-* **Fast Response:** Uses local polling (default 2s interval) and direct GET requests for instant control.
-* **Easy Setup:** Fully configurable via Home Assistant GUI.
+### 🔘 PHYSICAL BUTTON SUPPORT
+Full support for **Push Buttons** (Smart Switch inputs).
+* Buttons act as impulses (automatically reset after 0.3s).
+* **Zero Ghosting:** Advanced logic prevents buttons from getting "stuck" in the ON state during restarts or polling checks.
+
+### 🔍 ZERO CONFIGURATION
+* **No YAML:** Everything is configured via the Home Assistant GUI.
+* **Auto-Discovery:** Automatically detects all exposed devices.
+* **Dynamic Settings:** Change your Core IP or API Token anytime via the "Configure" button.
 
 ### 📱 Supported Devices
 * 💡 **Lights:** On/Off, Dimming (Hue & Analog), Tunable White (CCT). Includes "Move-to-On" logic.
@@ -25,8 +31,12 @@
 * 🔌 **Switches:** Relay outputs, sockets, valves.
 * 📊 **Sensors:** Temperature, Humidity (auto % conversion), CO2, Power, Energy, etc.
 * 🚪 **Binary Sensors:** Reed contacts (Doors/Windows).
+* 🔘 **Buttons:** Physical push buttons (mapped as binary sensors for automations).
 * 🛡️ **Alarm:** Virtual Alarm control (Arm/Disarm).
-* 🔘 **Modes:** Multi-value switches (e.g., Presence: Home/Away).
+* 🎛️ **Modes:** Multi-value switches (e.g., Presence: Home/Away).
+
+---
+
 ## 🚀 Installation
 
 ### Option 1: Via HACS (Recommended)
@@ -34,7 +44,7 @@
 2.  Go to **Integrations** > **Three dots (top right)** > **Custom repositories**.
 3.  Add the URL of this repository.
 4.  Category: **Integration**.
-5.  Click **Add** and then download "TapHome Local".
+5.  Click **Add** and then download **"TapHome Local"**.
 6.  Restart Home Assistant.
 
 ### Option 2: Manual
@@ -42,37 +52,46 @@
 2.  Copy it to your Home Assistant's `/config/custom_components/` directory.
 3.  Restart Home Assistant.
 
-## ⚙️ Configuration
+---
 
+## ⚙️ Configuration & Webhook Setup
+
+### Step 1: Add Integration in Home Assistant
 1.  Go to **Settings** > **Devices & Services**.
 2.  Click **Add Integration** and search for **TapHome Local**.
 3.  Enter your details:
-    * **API URL:** `http://<YOUR_CORE_IP>/api/TapHomeApi/v1` (e.g., `http://192.168.1.50/api/TapHomeApi/v1`)
-    * **Token:** Your local API token from TapHome settings.
+    * **API URL:** `http://<YOUR_CORE_IP>/api/TapHomeApi/v1`
+    * **Token:** Your local API token (Read/Write permissions recommended).
 
-> **How to get the Token:**
-> In the TapHome App, go to **Settings** -> **Expose Devices** -> **TapHome API** -> **Create new access token**. Ensure the token has `Read` and `Write` permissions (or simply access to devices you want to control).
+### Step 2: Configure Webhook (Crucial for Speed!)
+To enable instant updates, you must tell TapHome where to send the data.
 
-## 🛠️ Advanced Settings
-
-You can enable **Debug Logging** to troubleshoot connection issues:
-1.  Go to the **TapHome Local** integration card.
+1.  In Home Assistant, go to **Settings** > **Devices & Services** > **TapHome Local**.
 2.  Click **Configure**.
-3.  Enable **Debug Logging**.
-4.  Check your Home Assistant logs for detailed communication data.
+3.  Copy the URL displayed in the **`Webhook URL`** field.
+    * *Example:* `http://192.168.1.50:8123/api/webhook/taphome_local_push_xxxxx`
+4.  Open the **TapHome App**:
+    * Go to **Settings** -> **My Location** -> **Expose Devices** -> **TapHome API**.
+    * Enable **Allow Web Hook**.
+    * Paste the URL into **Web Hook URL**.
+    * Leave headers empty.
+
+**Done!** Try pressing a physical button or toggling a light in TapHome – Home Assistant should react instantly.
 
 ---
 
 ## 🇸🇰 Slovak Description
 
-**TapHome Local** je integrácia pre Home Assistant, ktorá umožňuje plné ovládanie systému TapHome cez lokálnu sieť pomocou home assistanta.
+**TapHome Local v2** je pokročilá integrácia pre Home Assistant, ktorá prináša okamžitú odozvu vďaka podpore **Webhookov**.
 
-**Hlavné výhody:**
-* Funguje bez cloudu (lokálne API).
-* Podporuje všetky bežné zariadenia (Svetlá, Žalúzie, Kúrenie, Senzory, Alarm).
-* Automaticky opravuje formát dát (napr. percentá vlhkosti).
-* Inštalácia a nastavenie cez grafické rozhranie HA.
-* ak niečo nepôjde, neváhajte ma kontaktovať
+### ✨ Čo je nové vo verzii 2.0?
+
+* **⚡ Okamžitá odozva (Push):** Home Assistant už nečaká, kým sa opýta na stav. TapHome posiela zmeny okamžite.
+* **🔘 Podpora Tlačidiel:** Fyzické tlačidlá v dome (Push Buttons) sú v HA viditeľné ako senzory, ktoré pri stlačení prebliknú. Ideálne pre automatizácie!
+* **🛠️ Jednoduché nastavenie:** IP adresu, Token aj Webhook URL nájdete a zmeníte priamo v nastaveniach integrácie.
+
+### Inštalácia Webhooku
+Pre správnu funkčnosť (okamžité reakcie) je nutné skopírovať **Webhook URL** z nastavení integrácie v Home Assistantovi a vložiť ju do aplikácie **TapHome** (Nastavenia -> Vystaviť zariadenia -> TapHome API -> Web Hook URL).
 
 ---
 
