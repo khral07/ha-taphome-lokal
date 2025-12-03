@@ -13,7 +13,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         # 1. Majú ValueTypeId 52 (Push Button Action)
         # 2. Alebo sú explicitne typu "PushButton" / "VirtualPushButton"
         # 3. Alebo majú ValueTypeId 48 (Switch), ale nie sú to svetlá ani zásuvky, a chceme ich ako tlačidlo (voliteľné)
-        
         # Pre istotu pridáme zariadenia, ktoré majú ID 52 (najčastejšie pre brány/tlačidlá)
         if 52 in supported_values:
             entities.append(TapHomeButton(coordinator, device))
