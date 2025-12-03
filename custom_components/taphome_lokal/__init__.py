@@ -12,7 +12,7 @@ from .const import DOMAIN, CONF_URL, CONF_TOKEN, CONF_DEBUG_LOGGING
 _LOGGER = logging.getLogger(__name__)
 
 # List of supported platforms / Zoznam podporovaných platforiem
-PLATFORMS = [Platform.LIGHT, Platform.CLIMATE, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH, Platform.COVER, Platform.SELECT, Platform.ALARM_CONTROL_PANEL]
+PLATFORMS = [Platform.LIGHT, Platform.CLIMATE, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH, Platform.COVER, Platform.SELECT, Platform.ALARM_CONTROL_PANEL, Platform.BUTTON]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Start the integration via GUI. / Spustenie integrácie cez GUI.
@@ -125,4 +125,5 @@ class TapHomeCoordinator(DataUpdateCoordinator):
             
             async with session.get(url, headers=self.headers, params=params) as resp:
                 if resp.status != 200:
+
                      _LOGGER.error(f"Write error / Chyba zápisu: {await resp.text()}")
