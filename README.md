@@ -61,20 +61,20 @@ Full support for **Push Buttons** (Smart Switch inputs).
 2.  Click **Add Integration** and search for **TapHome Local**.
 3.  Enter your details:
     * **API URL:** `http://<YOUR_CORE_IP>/api/TapHomeApi/v1`
-    * **Token:** Your local API token (Read/Write permissions recommended).
+    * **Token:** Your local API token (TapHome-> Settings-> Expose Devices-> Token).
 
 ### Step 2: Configure Webhook (Crucial for Speed!)
 To enable instant updates, you must tell TapHome where to send the data.
 
-1.  In Home Assistant, go to **Settings** > **Devices & Services** > **TapHome Local**.
+1.  After first inicalization of integration In Home Assistant, go to **Settings** > **Devices & Services** > **TapHome Local**.
 2.  Click **Configure**.
 3.  Copy the URL displayed in the **`Webhook URL`** field.
-    * *Example:* `http://192.168.1.50:8123/api/webhook/taphome_local_push_xxxxx`
+    * *Example:* `http://192.168.1.50:8123/api/webhook/taphome_local_push_xxxxx`. If its still not there click on reload button in integration.
 4.  Open the **TapHome App**:
     * Go to **Settings** -> **My Location** -> **Expose Devices** -> **TapHome API**.
     * Enable **Allow Web Hook**.
     * Paste the URL into **Web Hook URL**.
-    * Leave headers empty.
+    * Save
 
 **Done!** Try pressing a physical button or toggling a light in TapHome – Home Assistant should react instantly.
 
