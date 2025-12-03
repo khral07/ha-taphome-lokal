@@ -95,4 +95,12 @@ Pre správnu funkčnosť (okamžité reakcie) je nutné skopírovať **Webhook U
 
 ---
 
+## ✉️ Contact & Support / Kontakt
+
+If you have any questions or need help with the configuration, feel free to reach out via email:
+**adrianmucska#gmail.com**
+
+V prípade otázok alebo problémov s nastavením ma neváhajte kontaktovať na emaili:
+**adrianmucska#gmail.com**
+
 **Disclaimer:** This is a custom integration and is not officially affiliated with TapHome. Use at your own risk.
