@@ -9,7 +9,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         supported = [v['valueTypeId'] for v in device.get('supportedValues', [])]
         
         # LOGIKA FILTRÁCIE:
-        # Vytvoríme prepínač (Switch) len ak:
+        # Vytvorenie prepínača (Switch) len ak:
         # 1. Má atribút 48 (Relé/Switch)
         # 2. NEMÁ atribút 65 (Jas - to patrí do light.py)
         # 3. NEMÁ atribút 42 (Analógový výstup/Jas - to tiež patrí do light.py)
