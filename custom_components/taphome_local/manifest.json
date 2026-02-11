@@ -1,7 +1,7 @@
 {
   "domain": "taphome_local",
   "name": "TapHome Local",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "documentation": "https://github.com/khral07/ha-taphome-lokal",
   "dependencies": [],
   "codeowners": [],
@@ -10,5 +10,6 @@
   "config_flow": true
 
 }
+
 
 
