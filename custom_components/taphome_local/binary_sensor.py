@@ -49,7 +49,7 @@ class TapHomeBinarySensor(TapHomeEntity, BinarySensorEntity):
         self._attr_unique_id = f"taphome_binary_{self.device_id}_{type_id}"
         self._attr_device_class = device_class
         
-        # Ak sme vynútili ikonu (napr. pre bránu), nastavíme ju.
+        # Ak sa vynútila ikonu (napr. pre bránu), nastavíme ju.
         # Ak nie, Home Assistant si ju vyberie sám podľa device_class.
         if forced_icon:
             self._attr_icon = forced_icon
