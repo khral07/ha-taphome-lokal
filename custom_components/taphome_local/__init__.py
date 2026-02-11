@@ -49,12 +49,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
-# --- TOTO JE TÁ NOVÁ FUNKCIA PRE MANUÁLNE MAZANIE ---
+# --- FUNKCIA PRE MANUÁLNE MAZANIE ---
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Umožní užívateľovi manuálne vymazať zariadenie cez UI."""
-    # Vrátením True povieme HA, že súhlasíme s vymazaním.
     # Zariadenie zmizne, entity sa odpoja.
     return True
 # ----------------------------------------------------
@@ -171,4 +170,5 @@ class TapHomeCoordinator(DataUpdateCoordinator):
                 _LOGGER.info(f"SENDING: {url} {params}")
             async with session.get(url, headers=self.headers, params=params) as resp:
                 if resp.status != 200:
+
                      _LOGGER.error(f"Write error: {await resp.text()}")
