@@ -1,5 +1,5 @@
 # TapHome Local for Home Assistant 🏠
-![Logo](custom_components/taphome_lokal/icon.png)
+![Logo](icon.png)
 
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
