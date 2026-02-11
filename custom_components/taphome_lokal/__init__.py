@@ -8,6 +8,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.const import Platform
 from homeassistant.components import webhook
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, CONF_URL, CONF_TOKEN, CONF_DEBUG_LOGGING, WEBHOOK_ID_PREFIX, SIGNAL_BUTTON_PRESSED
 
@@ -48,6 +49,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
+# --- TOTO JE TÁ NOVÁ FUNKCIA PRE MANUÁLNE MAZANIE ---
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Umožní užívateľovi manuálne vymazať zariadenie cez UI."""
+    # Vrátením True povieme HA, že súhlasíme s vymazaním.
+    # Zariadenie zmizne, entity sa odpoja.
+    return True
+# ----------------------------------------------------
+
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -86,20 +97,17 @@ class TapHomeCoordinator(DataUpdateCoordinator):
                 _LOGGER.error(f"Error during discovery: {err}")
 
     async def _async_update_data(self):
-        # POLLING (Pravidelná kontrola)
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(f"{self.api_url}/getAllDevicesValues", headers=self.headers) as response:
                     if response.status != 200:
                         raise UpdateFailed(f"API Error: {response.status}")
                     
-                    # DÔLEŽITÉ: push=False -> Toto je len kontrola, nespúšťaj tlačidlá!
                     return self._parse_to_dict(await response.json(), push=False)
             except Exception as err:
                 raise UpdateFailed(f"Communication error: {err}")
 
     def _parse_to_dict(self, data, push=False):
-        """Parser. Parameter 'push' určuje, či máme spustiť eventy tlačidiel."""
         parsed_data = {}
         device_list = []
         
@@ -123,15 +131,9 @@ class TapHomeCoordinator(DataUpdateCoordinator):
                     type_id = val["valueTypeId"]
                     value = val["value"]
 
-                    # --- LOGIKA PRE TLAČIDLÁ ---
-                    # Ak je to ButtonPressed (52) a hodnota je 1 (True)
                     if type_id == 52 and value:
-                        # Signál pošleme LEN VTEDY, ak dáta prišli z Webhooku (push=True)
-                        # Ak je to z pollingu (push=False), ignorujeme to, aby sa nespúšťali duchovia.
                         if push:
                             async_dispatcher_send(self.hass, SIGNAL_BUTTON_PRESSED.format(d_id))
-                        
-                        # Vždy continue, aby sa to neuložilo do stavu
                         continue
                         
                     parsed_data[d_id][type_id] = value
@@ -144,7 +146,6 @@ class TapHomeCoordinator(DataUpdateCoordinator):
             if self.debug_mode:
                 _LOGGER.debug(f"WEBHOOK PUSH: {data}")
             
-            # WEBHOOK: Tu nastavíme push=True, takže tlačidlá budú fungovať
             new_data_fragment = self._parse_to_dict(data, push=True)
             
             if new_data_fragment:
