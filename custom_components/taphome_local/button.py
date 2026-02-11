@@ -13,7 +13,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         # 1. Majú ValueTypeId 52 (Push Button Action)
         # 2. Alebo sú explicitne typu "PushButton" / "VirtualPushButton"
         # 3. Alebo majú ValueTypeId 48 (Switch), ale nie sú to svetlá ani zásuvky, a chceme ich ako tlačidlo (voliteľné)
-        # Pre istotu pridáme zariadenia, ktoré majú ID 52 (najčastejšie pre brány/tlačidlá)
+        # Pre istotu zariadenia, ktoré majú ID 52 (najčastejšie pre brány/tlačidlá)
         if 52 in supported_values:
             entities.append(TapHomeButton(coordinator, device))
         elif "PushButton" in device_type:
@@ -28,8 +28,8 @@ class TapHomeButton(TapHomeEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Spracuje stlačenie tlačidla."""
-        # Pre tlačidlá zvyčajne posielame hodnotu 1 (stlačené) na ID 52
-        # Ak zariadenie nemá 52, skúsime 48 (Switch) s hodnotou 1 (impulz)
+        # Pre tlačidlá zvyčajne hodnota 1 (stlačené) na ID 52
+        # Ak zariadenie nemá 52, 48 (Switch) s hodnotou 1 (impulz)
         
         supported_values = [v['valueTypeId'] for v in self.device_config.get('supportedValues', [])]
         
