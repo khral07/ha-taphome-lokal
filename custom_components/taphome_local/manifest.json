@@ -1,7 +1,7 @@
 {
   "domain": "taphome_local",
   "name": "TapHome Local",
-  "version": "2.0.2",
+  "version": "2.0.5",
   "documentation": "https://github.com/khral07/ha-taphome-lokal",
   "issue_tracker": "https://github.com/khral07/ha-taphome-lokal/issues",
   "iot_class": "local_polling",
