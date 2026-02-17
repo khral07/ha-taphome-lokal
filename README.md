@@ -3,7 +3,7 @@
 
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/USERNAME/REPO_NAME)
+[![version](https://img.shields.io/badge/version-2.0.4-blue)](https://github.com/USERNAME/REPO_NAME)
 
 **TapHome Local** is a custom integration for Home Assistant that provides **instant, local control** of your TapHome smart home system. It communicates directly with the TapHome Core unit via the local API and uses **Webhooks** for immediate state updates.
 
