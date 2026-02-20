@@ -3,13 +3,13 @@
 
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![version](https://img.shields.io/badge/version-2.0.5-blue)](https://github.com/USERNAME/REPO_NAME)
+[![version](https://img.shields.io/badge/version-2.1.0-blue)](https://github.com/USERNAME/REPO_NAME)
 
 **TapHome Local** is a custom integration for Home Assistant that provides **instant, local control** of your TapHome smart home system. It communicates directly with the TapHome Core unit via the local API and uses **Webhooks** for immediate state updates.
 
 ---
 
-## ✨ Key Features (v2.0)
+## ✨ Key Features (v2.1)
 
 ### ⚡ INSTANT UPDATES VIA WEBHOOK
 The integration now supports **Push notifications**. When you switch a light or press a button in your house, Home Assistant updates **instantly** (milliseconds). No more waiting for polling intervals!
@@ -25,7 +25,7 @@ Full support for **Push Buttons** (Smart Switch inputs).
 * **Dynamic Settings:** Change your Core IP or API Token anytime via the "Configure" button.
 
 ### 📱 Supported Devices
-* 💡 **Lights:** On/Off, Dimming (Hue & Analog), Tunable White (CCT). Includes "Move-to-On" logic.
+* 💡 **Lights:** On/Off, Dimming (Hue & Analog), Tunable White (CCT), Full RGB & RGBW Light Support. Includes "Move-to-On" logic.
 * 🌡️ **Climate:** Smart Room Controllers with dynamic min/max temperature limits.
 * 🪟 **Covers:** Blinds and shutters with precise positioning.
 * 🔌 **Switches:** Relay outputs, sockets, valves.
@@ -34,6 +34,12 @@ Full support for **Push Buttons** (Smart Switch inputs).
 * 🔘 **Buttons:** Physical push buttons (mapped as binary sensors for automations).
 * 🛡️ **Alarm:** Virtual Alarm control (Arm/Disarm).
 * 🎛️ **Modes:** Multi-value switches (e.g., Presence: Home/Away).
+  
+### ⚙️ CUSTOM ENTITY MAPPING:
+* Turn any standard relay or smart button into a Garage Door, Valve, or Light directly from the UI Configuration menu! No more messy duplicate switches.
+
+### 🧹 End of Duplicate Entities: 
+* The logic in switch.py has been completely rewritten. The system now intelligently ignores devices that have color/brightness attributes or have been manually exposed as another type by the user. No more cluttered dashboards with redundant switch entities!
 
 ---
 
