@@ -14,7 +14,20 @@ from .const import DOMAIN, CONF_URL, CONF_TOKEN, CONF_DEBUG_LOGGING, WEBHOOK_ID_
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.LIGHT, Platform.CLIMATE, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH, Platform.COVER, Platform.SELECT, Platform.ALARM_CONTROL_PANEL, Platform.BUTTON]
+# --- TU JE ZMENA: Pridal som Platform.VALVE do zoznamu ---
+PLATFORMS = [
+    Platform.LIGHT, 
+    Platform.CLIMATE, 
+    Platform.SENSOR, 
+    Platform.BINARY_SENSOR, 
+    Platform.SWITCH, 
+    Platform.COVER, 
+    Platform.SELECT, 
+    Platform.ALARM_CONTROL_PANEL, 
+    Platform.BUTTON,
+    Platform.VALVE   # <--- TOTO JE NOVÉ
+]
+# ---------------------------------------------------------
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_url = entry.options.get(CONF_URL, entry.data.get(CONF_URL))
@@ -39,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         allowed_methods=["POST", "PUT"],
     )
     
+    # Toto zabezpečí, že keď zmeníš nastavenia (Svetlá/Ventily), integrácia sa reštartuje
     entry.async_on_unload(entry.add_update_listener(update_listener))
     return True
 
@@ -49,14 +63,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
-# --- FUNKCIA PRE MANUÁLNE MAZANIE ---
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Umožní užívateľovi manuálne vymazať zariadenie cez UI."""
-    # Zariadenie zmizne, entity sa odpoja.
     return True
-# ----------------------------------------------------
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
@@ -168,7 +179,7 @@ class TapHomeCoordinator(DataUpdateCoordinator):
             params = {"valueTypeId": type_id, "value": value}
             if self.debug_mode:
                 _LOGGER.info(f"SENDING: {url} {params}")
+            
             async with session.get(url, headers=self.headers, params=params) as resp:
                 if resp.status != 200:
-
                      _LOGGER.error(f"Write error: {await resp.text()}")
