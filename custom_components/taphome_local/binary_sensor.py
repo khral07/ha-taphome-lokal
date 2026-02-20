@@ -1,7 +1,9 @@
 import asyncio
 from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorDeviceClass
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DOMAIN
 from .entity import TapHomeEntity
+from .const import SIGNAL_BUTTON_PRESSED
 
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -39,6 +41,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
             # Vytvorenie entity s parametrami
             entities.append(TapHomeBinarySensor(coordinator, device, 44, device_class, forced_icon))
             
+        # --- CHÝBAJÚCA ČASŤ: Tlačidlá (ID 52) ako impulzné binárne senzory ---
+        if 52 in supported_values:
+            entities.append(TapHomePushButton(coordinator, device))
+
     async_add_entities(entities)
 
 class TapHomeBinarySensor(TapHomeEntity, BinarySensorEntity):
@@ -50,7 +56,6 @@ class TapHomeBinarySensor(TapHomeEntity, BinarySensorEntity):
         self._attr_device_class = device_class
         
         # Ak sa vynútila ikonu (napr. pre bránu), nastavíme ju.
-        # Ak nie, Home Assistant si ju vyberie sám podľa device_class.
         if forced_icon:
             self._attr_icon = forced_icon
 
@@ -58,3 +63,38 @@ class TapHomeBinarySensor(TapHomeEntity, BinarySensorEntity):
     def is_on(self):
         val = self.coordinator.data.get(self.device_id, {}).get(self.type_id)
         return val == 1
+
+
+class TapHomePushButton(TapHomeEntity, BinarySensorEntity):
+    """Impulzný binárny senzor pre fyzické tlačidlo (reaguje na webhook impulz)."""
+    def __init__(self, coordinator, device_config):
+        super().__init__(coordinator, device_config)
+        self._attr_unique_id = f"taphome_pushbutton_{self.device_id}"
+        self._attr_icon = "mdi:gesture-tap-button"
+        self._is_on = False
+
+    @property
+    def is_on(self):
+        return self._is_on
+
+    async def async_added_to_hass(self):
+        """Keď je entita pridaná, začne počúvať signál stlačenia z Webhooku."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, 
+                SIGNAL_BUTTON_PRESSED.format(self.device_id), 
+                self._handle_button_press
+            )
+        )
+
+    async def _handle_button_press(self):
+        """Simuluje krátky impulz (0.3s) po prijatí signálu."""
+        self._is_on = True
+        self.async_write_ha_state()
+        
+        # Počkáme 0.3 sekundy a vrátime stav na vypnuté
+        await asyncio.sleep(0.3)
+        
+        self._is_on = False
+        self.async_write_ha_state()
