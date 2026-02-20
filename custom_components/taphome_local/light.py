@@ -3,24 +3,36 @@ from homeassistant.components.light import (
     ColorMode, 
     ATTR_BRIGHTNESS, 
     ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR  # <--- Zmena: Importujeme HS (Hue/Saturation) farbu
+    ATTR_HS_COLOR  # Tvoj existujúci import pre HS farby
 )
 from . import DOMAIN
 from .entity import TapHomeEntity
+from .const import CONF_EXPOSE_AS_LIGHT  # <--- NOVÉ: Import konštanty pre nastavenia
 
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]
+    
+    # <--- NOVÉ: Načítame zoznam IDčiek, ktoré užívateľ označil v menu ako SVETLÁ
+    # (entry.options vracajú stringy, preto konverzia na string pre porovnanie s dev_id)
+    forced_lights = entry.options.get(CONF_EXPOSE_AS_LIGHT, [])
+    
     entities = []
     for device in coordinator.devices_config:
+        # Pre istotu prevedieme na string, aby sedelo porovnanie
+        dev_id = str(device["deviceId"])
         supported_ids = [v['valueTypeId'] for v in device.get('supportedValues', [])]
         
+        # Tvoja existujúca detekcia
         has_brightness = (65 in supported_ids) or (42 in supported_ids)
         has_cct = (89 in supported_ids)
-        has_color = (40 in supported_ids) and (41 in supported_ids) # <--- Zmena: Hľadáme ID 40 a 41
+        has_color = (40 in supported_ids) and (41 in supported_ids)
         is_lighting_category = device.get("category") == "OSVETLENIE"
         
-        if has_brightness or has_cct or has_color or is_lighting_category:
+        # <--- ZMENA LOGIKY:
+        # Pridáme svetlo, ak spĺňa automatické podmienky, ALEBO ak je v zozname vynútených (forced_lights)
+        if has_brightness or has_cct or has_color or is_lighting_category or (dev_id in forced_lights):
             entities.append(TapHomeLight(coordinator, device))
+            
     async_add_entities(entities)
 
 class TapHomeLight(TapHomeEntity, LightEntity):
@@ -84,7 +96,7 @@ class TapHomeLight(TapHomeEntity, LightEntity):
             hue = self._get_val(self._hue_id)
             sat = self._get_val(self._sat_id)
             if hue is not None and sat is not None:
-                # HA používa sýtosť 0-100. Ak TapHome posiela 0.0 - 1.0 (ako pri jase), prenásobíme 100
+                # HA používa sýtosť 0-100. Ak TapHome posiela 0.0 - 1.0, prenásobíme 100
                 sat_ha = sat * 100 if sat <= 1.0 else sat
                 return (hue, sat_ha)
         return None
@@ -100,7 +112,7 @@ class TapHomeLight(TapHomeEntity, LightEntity):
     @property
     def supported_color_modes(self):
         modes = set()
-        if self._hue_id and self._sat_id: modes.add(ColorMode.HS) # Podpora pre Odtieň/Sýtosť
+        if self._hue_id and self._sat_id: modes.add(ColorMode.HS)
         if self._cct_id: modes.add(ColorMode.COLOR_TEMP)
         if not modes and self._brightness_id: modes.add(ColorMode.BRIGHTNESS)
         if not modes: modes.add(ColorMode.ONOFF)
@@ -122,7 +134,6 @@ class TapHomeLight(TapHomeEntity, LightEntity):
         # 1. Nastavenie Farby (Hue/Saturation)
         if ATTR_HS_COLOR in kwargs and self._hue_id and self._sat_id:
             hue, sat = kwargs[ATTR_HS_COLOR]
-            # Sýtosť z HA (0-100) prekonvertujeme pre TapHome (0.0-1.0)
             sat_taphome = sat / 100.0
             await self.coordinator.async_set_value(self.device_id, self._hue_id, hue)
             await self.coordinator.async_set_value(self.device_id, self._sat_id, sat_taphome)
