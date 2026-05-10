@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TapHome Local",
+        "description": "Connect to your TapHome Core on the local network.",
+        "data": {
+          "url": "API URL",
+          "token": "API Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to TapHome Core. Check URL and token."
+    },
+    "abort": {
+      "already_configured": "This TapHome Core is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TapHome Options",
+        "description": "Configure connection, debug logging, and manual device assignments.",
+        "data": {
+          "url": "API URL",
+          "token": "API Token",
+          "debug_logging": "Enable debug logging",
+          "expose_as_light": "Expose as Light",
+          "expose_as_cover": "Expose as Cover (gate/garage)",
+          "expose_as_valve": "Expose as Valve (water)",
+          "expose_as_switch": "Expose as Switch",
+          "webhook_url_display": "Webhook URL (copy into TapHome app)"
+        }
+      }
+    }
+  }
+}

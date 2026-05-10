@@ -48,12 +48,16 @@ class TapHomeCover(TapHomeEntity, CoverEntity):
     @property
     def current_cover_position(self):
         val = self.coordinator.data.get(self.device_id, {}).get(1)
-        if val is not None: return int(val * 100)
-        return 0
+        if val is not None:
+            return int(val * 100)
+        return None
 
     @property
     def is_closed(self):
-        return self.current_cover_position == 0
+        pos = self.current_cover_position
+        if pos is None:
+            return None
+        return pos == 0
 
     async def async_open_cover(self, **kwargs):
         await self.coordinator.async_set_value(self.device_id, 1, 1.0)

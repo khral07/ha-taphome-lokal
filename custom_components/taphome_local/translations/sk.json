@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TapHome Local",
+        "description": "Pripojenie k jednotke TapHome Core v lokálnej sieti.",
+        "data": {
+          "url": "API URL",
+          "token": "API Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nepodarilo sa pripojiť k TapHome Core. Skontrolujte URL a token."
+    },
+    "abort": {
+      "already_configured": "Tento TapHome Core je už nakonfigurovaný."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nastavenia TapHome",
+        "description": "Nastavenie pripojenia, debug logovania a manuálneho priradenia zariadení.",
+        "data": {
+          "url": "API URL",
+          "token": "API Token",
+          "debug_logging": "Zapnúť debug logovanie",
+          "expose_as_light": "Vystaviť ako svetlo",
+          "expose_as_cover": "Vystaviť ako bránu/garáž",
+          "expose_as_valve": "Vystaviť ako ventil (voda)",
+          "expose_as_switch": "Vystaviť ako spínač",
+          "webhook_url_display": "Webhook URL (skopírujte do TapHome aplikácie)"
+        }
+      }
+    }
+  }
+}

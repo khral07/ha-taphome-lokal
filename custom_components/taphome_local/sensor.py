@@ -53,8 +53,8 @@ class TapHomeSensor(TapHomeEntity, SensorEntity):
             # --- FIX FOR HUMIDITY / FIX PRE VLHKOSŤ ---
             # If humidity (3), TapHome sends 0.47, we want 47 / Ak je to vlhkosť (3), TapHome posiela 0.47, my chceme 47
             if self.type_id == 3:
-                return int(float_val * 100)
-            
+                return round(float_val * 100, 1)
+
             return float_val
         except (ValueError, TypeError):
             return None

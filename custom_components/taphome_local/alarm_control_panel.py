@@ -19,7 +19,10 @@ class TapHomeAlarm(TapHomeEntity, AlarmControlPanelEntity):
     def __init__(self, coordinator, device_config):
         super().__init__(coordinator, device_config)
         self._attr_unique_id = f"taphome_alarm_{self.device_id}"
-        self._attr_supported_features = AlarmControlPanelEntityFeature.ARM_HOME | AlarmControlPanelEntityFeature.ARM_AWAY
+        # TapHome AlarmMode has only 0/1 — expose only ARM_AWAY.
+        # TapHome AlarmMode má iba 0/1 — vystav len ARM_AWAY.
+        self._attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+        self._attr_code_arm_required = False
 
     @property
     def alarm_state(self):
