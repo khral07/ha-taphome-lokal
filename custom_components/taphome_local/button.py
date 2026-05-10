@@ -47,7 +47,7 @@ class TapHomeButton(TapHomeEntity, ButtonEntity):
         # Ignore webhook echo within 2s of our own UI press. / Ignoruj echo do 2 s od UI stlačenia.
         if time.time() - self._last_ui_press < 2.0:
             return
-        self._attr_native_value = dt_util.utcnow()
+        self._attr_last_pressed = dt_util.utcnow()
         self.async_write_ha_state()
 
     async def async_press(self) -> None:
@@ -60,7 +60,7 @@ class TapHomeButton(TapHomeEntity, ButtonEntity):
 
         await self.coordinator.async_set_value(self.device_id, target_id, 1)
 
-        self._attr_native_value = dt_util.utcnow()
+        self._attr_last_pressed = dt_util.utcnow()
         self.async_write_ha_state()
 
         await self.coordinator.async_request_refresh()
