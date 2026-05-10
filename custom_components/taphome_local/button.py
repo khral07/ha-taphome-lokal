@@ -2,6 +2,7 @@ import time
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components.button import ButtonEntity, ButtonDeviceClass
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN
@@ -41,6 +42,7 @@ class TapHomeButton(TapHomeEntity, ButtonEntity):
             )
         )
 
+    @callback
     def _handle_physical_press(self, type_id=None):
         # Ignore webhook echo within 2s of our own UI press. / Ignoruj echo do 2 s od UI stlačenia.
         if time.time() - self._last_ui_press < 2.0:
