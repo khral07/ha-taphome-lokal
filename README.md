@@ -3,7 +3,7 @@
 ![Logo](custom_components/taphome_local/icon.png)
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![version](https://img.shields.io/badge/version-2.3.0-blue)](https://github.com/khral07/ha-taphome-lokal)
+[![version](https://img.shields.io/badge/version-2.4.0-blue)](https://github.com/khral07/ha-taphome-lokal)
 
 **TapHome Local** is a custom integration for Home Assistant that provides **instant, local control** of your TapHome smart home system. It communicates directly with the TapHome Core unit via the local API and uses **Webhooks** for immediate state updates.
 
@@ -23,17 +23,18 @@ Full support for **Push Buttons** (Smart Switch inputs).
 - **No YAML:** Everything is configured via the Home Assistant GUI.
 - **Auto-Discovery:** Automatically detects all exposed devices.
 - **Dynamic Settings:** Change your Core IP or API Token anytime via the Configure button.
+- **Re-authentication:** If the API token becomes invalid, Home Assistant prompts you to enter a new one — no need to delete and re-add the integration.
 
 ### Supported devices
-- **Lights:** On/Off, Dimming (Hue & Analog), Tunable White (CCT)
-- **Climate:** Smart Room Controllers with dynamic min/max temperature limits
-- **Covers:** Blinds and shutters with precise positioning
+- **Lights:** On/Off, Dimming (Hue & Analog), Tunable White (CCT). Colour + brightness are sent in a single command for flicker-free changes.
+- **Climate:** Smart Room Controllers with dynamic min/max temperature limits (heating)
+- **Covers:** Blinds and shutters with precise positioning, **slat tilt** and **opening/closing movement** indication
 - **Switches:** Relay outputs, sockets, valves
-- **Sensors:** Temperature, Humidity, CO2, Power, Energy, and more
-- **Binary Sensors:** Reed contacts (Doors/Windows)
+- **Sensors:** Temperature, Humidity, CO2, Power, Energy, Illuminance, Wind — plus **generic Modbus variables / energy meters** (auto-detected, with units parsed from the device name e.g. `[kWh]`)
+- **Binary Sensors:** Reed contacts (Doors/Windows/Motion/Gates)
 - **Buttons:** Physical push buttons
 - **Alarm:** Virtual Alarm control (Arm/Disarm)
-- **Modes:** Multi-value switches (e.g. Presence: Home/Away)
+- **Modes:** Multi-value switches as selectors (e.g. Presence: Home/Away); disabled options are hidden automatically
 
 ---
 
@@ -75,6 +76,19 @@ Full support for **Push Buttons** (Smart Switch inputs).
 
 ### Inštalácia Webhooku
 Skopírujte **Webhook URL** z nastavení integrácie (Settings → TapHome Local → Configure) a vložte ju do aplikácie TapHome (Nastavenia → Vystaviť zariadenia → TapHome API → Web Hook URL).
+
+---
+
+## What's new in 2.4.0
+
+- **Energy meters & Modbus variables now appear** as sensors (previously hidden), with units auto-parsed from the device name.
+- **Blinds**: slat **tilt** control and **opening/closing** movement indication; corrected open/closed orientation.
+- **Multi-value switches** no longer show up twice (as both a switch and a selector); disabled mode options are hidden.
+- **Re-authentication flow** when the API token expires.
+- **Batched light commands** (colour + brightness + on in one request) with automatic fallback for older Cores.
+- Reliability/modernization under the hood (HA 2025/2026 patterns). Physical-button behaviour is unchanged.
+
+See full release notes in the [GitHub release](https://github.com/khral07/ha-taphome-lokal/releases).
 
 ---
 
