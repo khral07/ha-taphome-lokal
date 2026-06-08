@@ -8,13 +8,21 @@
           "url": "API URL",
           "token": "API Token"
         }
+      },
+      "reauth_confirm": {
+        "title": "Opätovné prihlásenie TapHome",
+        "description": "TapHome token už nie je platný. Zadajte nový API token.",
+        "data": {
+          "token": "API Token"
+        }
       }
     },
     "error": {
       "cannot_connect": "Nepodarilo sa pripojiť k TapHome Core. Skontrolujte URL a token."
     },
     "abort": {
-      "already_configured": "Tento TapHome Core je už nakonfigurovaný."
+      "already_configured": "Tento TapHome Core je už nakonfigurovaný.",
+      "reauth_successful": "Opätovné prihlásenie bolo úspešné."
     }
   },
   "options": {

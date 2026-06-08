@@ -28,6 +28,12 @@ class TapHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             valid = await self._test_connection(user_input[CONF_URL], user_input[CONF_TOKEN])
             if valid:
+                # Unikátne ID z Core (locationId) bráni duplicitnému pridaniu rovnakého Core.
+                # Unique ID from the Core (locationId) prevents adding the same Core twice.
+                loc_id = await self._get_location_id(user_input[CONF_URL], user_input[CONF_TOKEN])
+                if loc_id:
+                    await self.async_set_unique_id(loc_id)
+                    self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="TapHome", data=user_input)
             errors["base"] = "cannot_connect"
 
@@ -37,6 +43,31 @@ class TapHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         })
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_reauth(self, entry_data):
+        # Spustí sa, keď API vráti 401 (neplatný token). / Triggered when the API returns 401.
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        errors = {}
+        entry = self._reauth_entry
+        url = entry.options.get(CONF_URL, entry.data.get(CONF_URL))
+        if user_input is not None:
+            if await self._test_connection(url, user_input[CONF_TOKEN]):
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_TOKEN: user_input[CONF_TOKEN]}
+                )
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+            errors["base"] = "cannot_connect"
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+            errors=errors,
+        )
 
     async def _test_connection(self, url, token):
         try:
@@ -50,6 +81,23 @@ class TapHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return resp.status == 200
         except Exception:
             return False
+
+    async def _get_location_id(self, url, token):
+        # Vráti locationId z /location, alebo None. / Returns locationId from /location, or None.
+        try:
+            headers = {"Authorization": f"TapHome {token}"}
+            session = async_get_clientsession(self.hass)
+            async with session.get(
+                f"{url}/location",
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=5),
+            ) as resp:
+                if resp.status != 200:
+                    return None
+                data = await resp.json()
+                return str(data.get("locationId")) if isinstance(data, dict) else None
+        except Exception:
+            return None
 
     @staticmethod
     @callback
@@ -76,7 +124,7 @@ class TapHomeOptionsFlowHandler(config_entries.OptionsFlow):
         curr_covers = self._config_entry.options.get(CONF_EXPOSE_AS_COVER, [])
 
         devices_dict = {}
-        coordinator = self.hass.data.get(DOMAIN, {}).get(self._config_entry.entry_id)
+        coordinator = getattr(self._config_entry, "runtime_data", None)
 
         if coordinator and coordinator.devices_config:
             devices_dict = {

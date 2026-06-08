@@ -3,19 +3,27 @@ from . import DOMAIN
 from .entity import TapHomeEntity
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = []
     for device in coordinator.devices_config:
         for val in device.get("supportedValues", []):
             if val["valueTypeId"] == 49:
-                entities.append(TapHomeSelect(coordinator, device, val))
+                # Iba ak existuje aspoň jedna povolená hodnota. / Only if at least one enabled value.
+                enabled = [e for e in val.get("enumeratedValues", []) if e.get("isEnabled", True)]
+                if enabled:
+                    entities.append(TapHomeSelect(coordinator, device, val))
     async_add_entities(entities)
 
 class TapHomeSelect(TapHomeEntity, SelectEntity):
     def __init__(self, coordinator, device_config, value_config):
         super().__init__(coordinator, device_config)
         self._attr_unique_id = f"taphome_select_{self.device_id}"
-        self.options_map = {item['name']: item['value'] for item in value_config.get('enumeratedValues', [])}
+        # Iba povolené hodnoty (isEnabled). / Only enabled values.
+        self.options_map = {
+            item['name']: item['value']
+            for item in value_config.get('enumeratedValues', [])
+            if item.get('isEnabled', True)
+        }
         self._attr_options = list(self.options_map.keys())
 
     @property

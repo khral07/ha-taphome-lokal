@@ -7,7 +7,7 @@ from . import DOMAIN
 from .entity import TapHomeEntity
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = []
     for device in coordinator.devices_config:
         supported_values = [v['valueTypeId'] for v in device.get('supportedValues', [])]

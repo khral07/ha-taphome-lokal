@@ -12,7 +12,7 @@ from .const import CONF_EXPOSE_AS_LIGHT
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     forced_lights = entry.options.get(CONF_EXPOSE_AS_LIGHT, [])
 
@@ -130,15 +130,19 @@ class TapHomeLight(TapHomeEntity, LightEntity):
         return dev_data.get(type_id)
 
     async def async_turn_on(self, **kwargs):
+        # Collect all requested changes and send them in ONE batched request, so
+        # colour + brightness + ON happen atomically (no flicker, no 503 throttling).
+        # Zozbieraj všetky zmeny a pošli ich v JEDNOM dávkovom requeste, aby sa
+        # farba + jas + ON udiali naraz (žiadne blikanie, žiadne 503).
+        pairs = []
+
         if ATTR_HS_COLOR in kwargs and self._hue_id and self._sat_id:
             hue, sat = kwargs[ATTR_HS_COLOR]
-            await self.coordinator.async_set_value(self.device_id, self._hue_id, hue)
-            await self.coordinator.async_set_value(self.device_id, self._sat_id, sat / 100.0)
+            pairs.append((self._hue_id, hue))
+            pairs.append((self._sat_id, sat / 100.0))
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs and self._cct_id:
-            await self.coordinator.async_set_value(
-                self.device_id, self._cct_id, kwargs[ATTR_COLOR_TEMP_KELVIN]
-            )
+            pairs.append((self._cct_id, kwargs[ATTR_COLOR_TEMP_KELVIN]))
 
         if ATTR_BRIGHTNESS in kwargs and self._brightness_id:
             brightness = kwargs[ATTR_BRIGHTNESS] / 255
@@ -147,12 +151,17 @@ class TapHomeLight(TapHomeEntity, LightEntity):
                 target_id = 67
             if self._brightness_id == 65 and 68 in self.supported_val_ids:
                 target_id = 68
-            await self.coordinator.async_set_value(self.device_id, target_id, brightness)
+            pairs.append((target_id, brightness))
 
         # Only send ON if light isn't already on (avoids flicker on color-only changes).
-        # Pošli ON iba ak svetlo nie je zapnuté (predíde blikaniu pri samotnej zmene farby).
+        # This guard is critical — it is what fixed the button/light blinking issue.
+        # Pošli ON iba ak svetlo nesvieti (predíde blikaniu pri samotnej zmene farby).
+        # Tento guard je kľúčový — práve on vyriešil blikanie svetla pri tlačidlách.
         if not self.is_on:
-            await self.coordinator.async_set_value(self.device_id, 48, 1)
+            pairs.append((48, 1))
+
+        if pairs:
+            await self.coordinator.async_set_values(self.device_id, pairs)
 
         await self.coordinator.async_request_refresh()
 

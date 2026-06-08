@@ -6,7 +6,7 @@ import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.const import Platform
 from homeassistant.components import webhook
@@ -17,6 +17,23 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN, CONF_URL, CONF_TOKEN, CONF_DEBUG_LOGGING, WEBHOOK_ID_PREFIX, SIGNAL_BUTTON_PRESSED
 
 _LOGGER = logging.getLogger(__name__)
+
+# Typed config entry: entry.runtime_data is the coordinator.
+# Typovaný config entry: entry.runtime_data je koordinátor.
+type TapHomeConfigEntry = ConfigEntry["TapHomeCoordinator"]
+
+
+def _fmt(value):
+    """Format a scalar for TapHome. Whole floats -> ints (1.0 -> 1), bool -> 1/0.
+
+    Naformátuje skalár pre TapHome. Celé floaty -> int (1.0 -> 1), bool -> 1/0.
+    """
+    if isinstance(value, bool):
+        return 1 if value else 0
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return value
+
 
 PLATFORMS = [
     Platform.LIGHT,
@@ -32,7 +49,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> bool:
     api_url = entry.options.get(CONF_URL, entry.data.get(CONF_URL))
     token = entry.options.get(CONF_TOKEN, entry.data.get(CONF_TOKEN))
 
@@ -43,8 +60,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    # Modern HA: store the coordinator on the entry instead of a global hass.data dict.
+    # Moderné HA: koordinátor ulož na entry namiesto globálneho hass.data slovníka.
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -62,12 +80,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> bool:
     webhook_id = f"{WEBHOOK_ID_PREFIX}{entry.entry_id}"
     webhook.async_unregister(hass, webhook_id)
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
@@ -75,7 +91,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     # Allow removal only if the device is no longer reported by the Core.
     # Povoliť odstránenie iba ak zariadenie už nie je hlásené z Core.
-    coordinator = hass.data.get(DOMAIN, {}).get(config_entry.entry_id)
+    coordinator = getattr(config_entry, "runtime_data", None)
     if coordinator is None:
         return True
     active_ids = {str(d.get("deviceId")) for d in coordinator.devices_config}
@@ -96,6 +112,7 @@ class TapHomeCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name="TapHome API",
             update_interval=timedelta(seconds=60),
+            config_entry=entry,
         )
         self.api_url = api_url
         self.hass = hass
@@ -106,6 +123,11 @@ class TapHomeCoordinator(DataUpdateCoordinator):
         self.devices_config = []
         self.debug_mode = entry.options.get(CONF_DEBUG_LOGGING, False)
         self._session = async_get_clientsession(hass)
+        # Local Cores don't support batched POST setDeviceValue (return 404). After the first
+        # such response we stop trying and go straight to sequential GET writes.
+        # Lokálne Core nepodporujú dávkový POST setDeviceValue (vráti 404). Po prvej takej
+        # odpovedi to prestaneme skúšať a ideme rovno na sekvenčný GET zápis.
+        self._batch_supported = True
 
     async def async_get_discovery(self):
         try:
@@ -135,9 +157,15 @@ class TapHomeCoordinator(DataUpdateCoordinator):
                 headers=self.headers,
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as response:
+                # 401 = invalid token -> trigger HA re-authentication flow.
+                # 401 = neplatný token -> spustí HA reauth flow.
+                if response.status == 401:
+                    raise ConfigEntryAuthFailed("Invalid TapHome token")
                 if response.status != 200:
                     raise UpdateFailed(f"API Error: {response.status}")
                 return self._parse_to_dict(await response.json(), push=False)
+        except ConfigEntryAuthFailed:
+            raise
         except Exception as err:
             raise UpdateFailed(f"Communication error: {err}")
 
@@ -174,7 +202,7 @@ class TapHomeCoordinator(DataUpdateCoordinator):
                 # Button events (press 52, hold 38): dispatch signal, don't store.
                 # Eventy tlačidiel: poslať signál, neukladať hodnotu.
                 if type_id in (52, 38):
-                    if push:
+                    if push and value == 1:
                         async_dispatcher_send(
                             self.hass, SIGNAL_BUTTON_PRESSED.format(d_id), type_id
                         )
@@ -209,7 +237,7 @@ class TapHomeCoordinator(DataUpdateCoordinator):
 
     async def async_set_value(self, device_id, type_id, value):
         url = f"{self.api_url}/setDeviceValue/{device_id}"
-        params = {"valueTypeId": type_id, "value": value}
+        params = {"valueTypeId": type_id, "value": _fmt(value)}
         if self.debug_mode:
             _LOGGER.info("SENDING: %s %s", url, params)
 
@@ -235,3 +263,68 @@ class TapHomeCoordinator(DataUpdateCoordinator):
                     continue
                 _LOGGER.error("Write exception: %s", err)
                 return
+
+    async def async_set_values(self, device_id, pairs):
+        """Set multiple values on one device in a single POST. / Viac hodnôt naraz cez jeden POST.
+
+        pairs: iterable of (value_type_id, value). Setting color + brightness + ON in one
+        request avoids 503 throttling (writes < 500 ms) and light flicker.
+
+        SAFETY: if the batched POST fails (e.g. an older Core that doesn't support it),
+        we fall back to the proven sequential GET writes, so behaviour never regresses.
+        BEZPEČNOSŤ: ak dávkový POST zlyhá (napr. starší Core bez podpory), spravíme fallback
+        na overený sekvenčný GET zápis — správanie sa teda nikdy nezhorší.
+        """
+        pairs = list(pairs)
+        if not pairs:
+            return
+
+        # Only attempt the batched POST if the Core hasn't already told us it's unsupported.
+        # Dávkový POST skús len ak nám Core ešte nepovedal, že ho nepodporuje.
+        if self._batch_supported:
+            url = f"{self.api_url}/setDeviceValue/{device_id}"
+            body = {
+                "deviceId": device_id,
+                "values": [{"valueTypeId": tid, "value": _fmt(v)} for tid, v in pairs],
+            }
+            if self.debug_mode:
+                _LOGGER.info("SENDING (batch): %s %s", url, body)
+
+            for attempt in (0, 1):
+                try:
+                    async with self._session.post(
+                        url,
+                        headers=self.headers,
+                        json=body,
+                        timeout=aiohttp.ClientTimeout(total=10),
+                    ) as resp:
+                        if resp.status == 503 and attempt == 0:
+                            await asyncio.sleep(0.6)
+                            continue
+                        if resp.status == 200:
+                            return
+                        # 404/405 = Core doesn't support batched POST -> stop trying for good.
+                        # 404/405 = Core nepodporuje dávkový POST -> prestaň to skúšať natrvalo.
+                        if resp.status in (404, 405):
+                            self._batch_supported = False
+                            _LOGGER.info(
+                                "TapHome Core does not support batched writes (%s); "
+                                "using sequential writes from now on.", resp.status
+                            )
+                        else:
+                            _LOGGER.warning(
+                                "Batch write got %s, falling back to sequential writes",
+                                resp.status,
+                            )
+                        break  # fall through to sequential fallback
+                except Exception as err:
+                    if attempt == 0:
+                        await asyncio.sleep(0.6)
+                        continue
+                    _LOGGER.warning("Batch write failed (%s), falling back to sequential", err)
+                    break
+
+        # Sequential single-value GET writes (same behaviour as before batching existed).
+        # Sekvenčné jednoduché GET zápisy (rovnaké správanie ako pred zavedením dávkovania).
+        for tid, value in pairs:
+            await self.async_set_value(device_id, tid, value)

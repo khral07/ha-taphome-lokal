@@ -8,13 +8,21 @@
           "url": "API URL",
           "token": "API Token"
         }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate TapHome",
+        "description": "The TapHome token is no longer valid. Enter a new API token.",
+        "data": {
+          "token": "API Token"
+        }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect to TapHome Core. Check URL and token."
     },
     "abort": {
-      "already_configured": "This TapHome Core is already configured."
+      "already_configured": "This TapHome Core is already configured.",
+      "reauth_successful": "Re-authentication was successful."
     }
   },
   "options": {

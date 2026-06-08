@@ -5,11 +5,19 @@ from . import DOMAIN
 class TapHomeEntity(CoordinatorEntity):
     # Common ancestor for all TapHome entities. / Spoločný predok pre všetky TapHome entity.
 
+    # Modern HA naming: the entity name describes only the data point; HA prepends the
+    # device name automatically. For single-entity devices we leave name=None so the
+    # friendly name is just the device name (same visible result as before).
+    # Moderné HA pomenovanie: názov entity opisuje len dátový bod; HA pred neho automaticky
+    # pridá názov zariadenia. Pri zariadeniach s jednou entitou necháme name=None, takže
+    # friendly name je len názov zariadenia (rovnaký výsledok ako doteraz).
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator, device_config):
         super().__init__(coordinator)
         self.device_config = device_config
         self.device_id = device_config["deviceId"]
-        self._attr_name = device_config["name"]
+        self._attr_name = None
         self._attr_unique_id = f"taphome_{self.device_id}"
 
     @property

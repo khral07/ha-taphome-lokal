@@ -10,7 +10,7 @@ from .const import (
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     forced_lights = entry.options.get(CONF_EXPOSE_AS_LIGHT, [])
     forced_valves = entry.options.get(CONF_EXPOSE_AS_VALVE, [])
@@ -27,15 +27,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if (dev_id in forced_lights) or (dev_id in forced_valves) or (dev_id in forced_covers):
             continue
 
-        # Explicit force as switch (needs SwitchState ID 48). / Vynútený switch.
-        if dev_id in forced_switches and 48 in supported:
+        # Explicit force as switch (needs SwitchState ID 48, must not be multi-value 49).
+        # Vynútený switch (potrebuje 48, nesmie byť multi-value 49).
+        if dev_id in forced_switches and 48 in supported and 49 not in supported:
             if dev_id not in seen:
                 entities.append(TapHomeSwitch(coordinator, device))
                 seen.add(dev_id)
             continue
 
-        # Auto-detection: plain relay, not a light/cover. / Auto-detekcia relé.
+        # Auto-detection: plain relay, not a light/cover/multi-value switch.
+        # Auto-detekcia relé (nie svetlo/žalúzia/multi-value switch).
         if (48 in supported
+            and 49 not in supported
             and 65 not in supported
             and 42 not in supported
             and 40 not in supported
@@ -43,6 +46,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             and 70 not in supported
             and 89 not in supported
             and 1 not in supported
+            and 46 not in supported
             and device.get("category") != "OSVETLENIE"):
 
             if dev_id not in seen:

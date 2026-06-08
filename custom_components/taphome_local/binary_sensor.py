@@ -3,7 +3,7 @@ from . import DOMAIN
 from .entity import TapHomeEntity
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = []
     for device in coordinator.devices_config:
         supported_values = [v['valueTypeId'] for v in device.get('supportedValues', [])]
@@ -45,4 +45,6 @@ class TapHomeBinarySensor(TapHomeEntity, BinarySensorEntity):
     @property
     def is_on(self):
         val = self.coordinator.data.get(self.device_id, {}).get(self.type_id)
+        if val is None:
+            return None
         return val == 1

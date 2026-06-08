@@ -4,7 +4,7 @@ from .entity import TapHomeEntity
 from .const import CONF_EXPOSE_AS_VALVE
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     
     # Načítame manuálne vynútené ventily
     forced_valves = entry.options.get(CONF_EXPOSE_AS_VALVE, [])

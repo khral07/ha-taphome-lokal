@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 
@@ -13,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = []
     for device in coordinator.devices_config:
         supported_values = [v['valueTypeId'] for v in device.get('supportedValues', [])]
@@ -77,6 +78,8 @@ class TapHomeButton(TapHomeEntity, ButtonEntity):
             target_id = 48
 
         await self.coordinator.async_set_value(self.device_id, target_id, 1)
+        await asyncio.sleep(0.3)
+        await self.coordinator.async_set_value(self.device_id, target_id, 0)
 
         self._my_state = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
